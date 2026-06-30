@@ -5109,6 +5109,8 @@ document.addEventListener('click', function(e){
     income:64000,dsr:0.40,committed:0,updated:'Jun 12, 2026'},
    {id:'tasheka',first:'Tasheka',mid:'Marie',last:'Powell',last2:'',full:'Tasheka Marie Powell',
     trn:'',cosacs:'TMPO552014',trnOnFile:false,primaryDoc:{label:'Passport',number:'P2240551'},dob:'14 / 03 / 1994',phone:'+1 876 615 2208', addr:'19 Molynes Road, Kingston 11',type:'Current',rating:'N',status:'preapproved',income:69000,dsr:0.35,committed:0,updated:'Jun 20, 2026'},
+   {id:'damion',first:'Damion',mid:'Lloyd',last:'Foster',last2:'',full:'Damion Lloyd Foster',
+    trn:'998-554-201',cosacs:'DLFO774120',trnOnFile:true,primaryDoc:{label:'Licence',number:'1882043517'},dob:'22 / 05 / 1985',phone:'+1 876 538 2271', addr:'8 Constant Spring Road, Kingston 10',type:'Current',rating:'C',status:'active',income:15000,dsr:0.40,committed:7000,updated:'Jun 26, 2026'},
    {id:'andre',first:'Andre',mid:'Christopher',last:'Hutchinson',last2:'',full:'Andre Christopher Hutchinson',
     trn:'',cosacs:'ACHU663127',trnOnFile:false,primaryDoc:{label:'Licence',number:'1942776305'},dob:'07 / 09 / 1988',phone:'+1 876 482 9913', addr:'52 Hagley Park Road, Kingston 10',type:'Current',rating:'\u2014',status:'analysis',sale:{acct:'HP-30311',financed:145000,submitted:'Jun 19, 2026',product:'Hired Purchase'}},
    {id:'camille',first:'Camille',mid:'Antoinette',last:'Bennett',last2:'',full:'Camille Antoinette Bennett',
@@ -5176,16 +5178,31 @@ document.addEventListener('click', function(e){
     var hpAvail=slAvail, cashAvail=availMmi*F36;
     var usedPct=(slTotal>0?Math.round(slUsed/slTotal*100):0); var availPct=(slTotal>0?Math.round(slAvail/slTotal*100):0);
     function set(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; }
+    function sMoney(n){ return (n<0?'\u2212$':'$')+Math.abs(Math.round(Number(n||0))).toLocaleString('en-US'); }
     set('rc-name', c.full); var _CF=window.CUSTOMER_FULL||{},_cf=null; for(var _k in _CF){ if(_CF[_k]&&_CF[_k].cosacs===c.cosacs){ _cf=_CF[_k]; break; } } var _trnOn=_cf?_cf.trnOnFile:c.trnOnFile, _pd=_cf?_cf.primaryDoc:null; set('rc-id', _trnOn?c.trn:'\u2014'); var _pdw=document.getElementById('rc-pdoc-wrap'); if(_pdw){ if(!_trnOn&&_pd){ var _l=document.getElementById('rc-pdoc-lbl'),_n=document.getElementById('rc-pdoc'); if(_l)_l.textContent=_pd.label; if(_n)_n.textContent=_pd.number; _pdw.style.display=''; } else { _pdw.style.display='none'; var _l4=document.getElementById('rc-pdoc-lbl'),_n4=document.getElementById('rc-pdoc'); if(_l4)_l4.textContent=''; if(_n4)_n4.textContent=''; } }; set('rc-cosacs', c.cosacs); set('rc-phone', c.phone); set('rc-addr', c.updated||'—'); set('rc-updated', c.updated||'—');
     set('rc-rating', 'Rating '+(c.status==='preapproved'?c.rating:(window.customerRating?window.customerRating(c.id):c.rating)));
     var pay=document.getElementById('rc-pay');
     if(pay){ pay.style.cssText=''; if(c.status==='preapproved'){ pay.className='hd-chip'; pay.style.cssText='background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.4);'; pay.innerHTML='Pre-approved'; } else if(arr){ pay.className='hd-chip arrears'; pay.innerHTML=ICON_X+' In arrears'; } else { pay.className='hd-chip ok'; pay.innerHTML=ICON_CHK+' Up to date'; } }
-    set('rc-sl-avail', money0(slAvail)); set('rc-sl-limit', money0(slTotal)); set('rc-sl-used', money0(slUsed));
+    set('rc-sl-avail', sMoney(slAvail)); set('rc-sl-limit', money0(slTotal)); set('rc-sl-used', money0(slUsed));
     set('rc-sl-legend', availPct+'% available · '+money0(slAvail)+' of '+money0(slTotal));
     var slb=document.getElementById('rc-sl-bar'); if(slb) slb.style.width=usedPct+'%';
-    set('rc-mmi-avail', money0(availMmi)); set('rc-mmi-cap', money0(mmiCap)); set('rc-mmi-committed', money0(c.committed)); set('rc-mmi-avail2', money0(availMmi));
+    set('rc-mmi-avail', sMoney(availMmi)); set('rc-mmi-cap', money0(mmiCap)); set('rc-mmi-committed', money0(c.committed)); set('rc-mmi-avail2', sMoney(availMmi));
     var mb=document.getElementById('rc-mmi-bar'); if(mb) mb.style.width=(mmiCap>0?Math.round(c.committed/mmiCap*100):0)+'%';
-    set('rc-hp-avail', money0(hpAvail)); set('rc-cash-avail', money0(cashAvail));
+    set('rc-hp-avail', money0(Math.max(0,hpAvail))); set('rc-cash-avail', money0(Math.max(0,cashAvail)));
+    (function(){ var over=slAvail<0;
+      var scr=document.getElementById('screen-register-success');
+      var slCard=scr?scr.querySelector('.sl-card'):null, mmiCard=scr?scr.querySelector('.mmi-card'):null;
+      if(slCard) slCard.classList.toggle('is-over', over);
+      if(mmiCard) mmiCard.classList.toggle('is-over', over);
+      var term=slCard?slCard.querySelector('.term-chip'):null;
+      if(term){ if(over){ term.classList.add('over'); term.innerHTML="<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'></circle><line x1='12' y1='8' x2='12' y2='13'></line><line x1='12' y1='16' x2='12.01' y2='16'></line></svg> Over limit"; } else { term.classList.remove('over'); term.innerHTML="<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='9'></circle><path d='M12 7v5l3 2'></path></svg> Max term \u00b7 48 months"; } }
+      var per=mmiCard?mmiCard.querySelector('.mmi-per'):null; if(per) per.textContent= over ? '/ mo over' : '/ mo available';
+      if(over){ var legEl=document.getElementById('rc-sl-legend'); if(legEl) legEl.textContent=Math.round(slUsed/slTotal*100)+'% used \u00b7 '+money0(slUsed-slTotal)+' over limit'; }
+      var grid=scr?scr.querySelector('.cap-grid'):null;
+      var note=document.getElementById('rc-sl-overnote');
+      if(!note && grid && grid.parentNode){ note=document.createElement('div'); note.id='rc-sl-overnote'; grid.parentNode.insertBefore(note, grid.nextSibling); }
+      if(note){ if(over){ var ovr=Math.round(slUsed-slTotal); note.style.display=''; note.innerHTML="<div style='margin-top:14px;background:#F6F7F9;border:1px solid #DEE1E7;border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:11px;flex-wrap:wrap;'><svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='#5A616E' stroke-width='2' style='flex:none;'><circle cx='12' cy='12' r='10'></circle><line x1='12' y1='16' x2='12' y2='12'></line><line x1='12' y1='8' x2='12.01' y2='8'></line></svg><div style='font-size:13px;color:#414652;min-width:0;'><b style='color:#2C313B;'>Over the approved limit by "+money0(ovr)+".</b> A credit analyst authorised an over-limit exception on a transaction.</div><span class='uc-tip' tabindex='0' data-tip=\"Available is negative because a credit analyst authorised an over-limit exception on a transaction, letting this customer finance beyond their approved spending limit ("+money0(slTotal)+"). It is an approved exception \u2014 not arrears or delinquency. Any further financing will again require analyst approval.\" style='margin-left:auto;font-size:12.5px;font-weight:700;color:#4B5160;border-bottom:1px dashed #A9AEB8;cursor:help;white-space:nowrap;'>Why is this? \u24d8</span></div>"; } else { note.style.display='none'; note.innerHTML=''; } }
+    })();
     set('rc-hp-meta', c.committed>0 ? 'Active HP · committed '+money0(c.committed)+'/mo' : 'No active HP');
     var ban=document.getElementById('rc-arrears'); if(ban) ban.style.display=arr?'flex':'none';
     var hpc=document.getElementById('rc-hp-cta'), csc=document.getElementById('rc-cash-cta');
@@ -5974,6 +5991,18 @@ a:focus-visible, button:focus-visible, [role="button"]:focus-visible, [onclick]:
 .hd-chip.rating::before, .chip.rating::before{ content:''; position:absolute; top:calc(100% + 3px); left:14px; border:6px solid transparent; border-bottom-color:#11131A; opacity:0; visibility:hidden; transition:opacity .14s ease; z-index:81; pointer-events:none; }
 .hd-chip.rating:hover::after, .hd-chip.rating.tip-open::after, .chip.rating:hover::after, .chip.rating.tip-open::after,
 .hd-chip.rating:hover::before, .hd-chip.rating.tip-open::before, .chip.rating:hover::before, .chip.rating.tip-open::before{ opacity:1; visibility:visible; transform:translateY(0); }
+.jada-redux .sl-card.is-over{ background:#F6F7F9; border-color:#DEE1E7; }
+.jada-redux .sl-card.is-over::after{ opacity:0; }
+.jada-redux .sl-card.is-over .sl-avail-amount{ color:#3A3F4A; }
+.jada-redux .sl-card.is-over .sl-bar{ background:#E1E4E9; }
+.jada-redux .sl-card.is-over .sl-bar-fill{ background:repeating-linear-gradient(45deg,#9AA0AD,#9AA0AD 6px,#7E8593 6px,#7E8593 12px); }
+.jada-redux .term-chip.over{ background:#E7E9ED; color:#4B5160; border-color:#D4D8DF; }
+.jada-redux .mmi-card.is-over .mmi-amount{ color:#3A3F4A; }
+.jada-redux .mmi-card.is-over .mmi-bar{ background:#E1E4E9; }
+.jada-redux .mmi-card.is-over .mmi-bar-fill{ background:#9AA0AD; }
+.uc-tip{ position:relative; outline:none; }
+.uc-tip::after{ content:attr(data-tip); position:absolute; top:calc(100% + 9px); right:0; width:284px; max-width:74vw; background:#11131A; color:#fff; font-size:11.5px; font-weight:500; line-height:1.45; letter-spacing:normal; text-transform:none; text-align:left; padding:10px 12px; border-radius:10px; box-shadow:0 10px 26px rgba(0,0,0,.32); opacity:0; visibility:hidden; transform:translateY(-4px); transition:opacity .14s ease, transform .14s ease; z-index:80; pointer-events:none; white-space:normal; }
+.uc-tip:hover::after, .uc-tip:focus::after, .uc-tip.tip-open::after{ opacity:1; visibility:visible; transform:translateY(0); }
 /* ===================== mtopbar-css ===================== */
 .m-topbar{ display:none; }
 @media (max-width:640px){
@@ -6750,5 +6779,5 @@ window.initSimulation=function(params){
 };
 
 </script>
-<script>document.addEventListener('click',function(e){var t=e.target;var chip=t.closest?t.closest('.hd-chip.rating, .chip.rating'):null;var open=document.querySelectorAll('.tip-open');for(var i=0;i<open.length;i++){if(open[i]!==chip)open[i].classList.remove('tip-open');}if(chip){if(chip.getAttribute('data-tip'))chip.classList.toggle('tip-open');}},true);</script>
+<script>document.addEventListener('click',function(e){var t=e.target;var chip=t.closest?t.closest('.hd-chip.rating, .chip.rating, .uc-tip'):null;var open=document.querySelectorAll('.tip-open');for(var i=0;i<open.length;i++){if(open[i]!==chip)open[i].classList.remove('tip-open');}if(chip){if(chip.getAttribute('data-tip'))chip.classList.toggle('tip-open');}},true);</script>
 </body></html>
